@@ -13,12 +13,22 @@ from pathlib import Path
 from typing import Literal
 
 import yaml
+from dotenv import load_dotenv
 from pydantic import BaseModel, Field, model_validator
 
 logger = logging.getLogger(__name__)
 
 _ENV_VAR_RE = re.compile(r"\$\{([^}]+)\}")
 _DEFAULT_CONFIG_PATH = Path(__file__).resolve().parents[2] / "config.yaml"
+_DEFAULT_ENV_PATH = _DEFAULT_CONFIG_PATH.with_name(".env")
+
+
+def _load_env_file(config_path: Path) -> None:
+    """Load variables from a nearby .env file before resolving placeholders."""
+    env_path = config_path.with_name(".env")
+    if not env_path.exists() and config_path == _DEFAULT_CONFIG_PATH:
+        env_path = _DEFAULT_ENV_PATH
+    load_dotenv(env_path)
 
 
 def _resolve_env_vars(value: object) -> object:
@@ -136,6 +146,7 @@ def load_config(path: Path | str | None = None) -> AppConfig:
     validation so that secrets never need to live in the YAML file.
     """
     config_path = Path(path) if path else _DEFAULT_CONFIG_PATH
+    _load_env_file(config_path)
     if not config_path.exists():
         logger.warning("Config file %s not found, using defaults", config_path)
         return AppConfig()

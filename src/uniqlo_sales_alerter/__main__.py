@@ -1,4 +1,4 @@
-"""CLI entry-point: ``python -m uniqlo_sales_alerter [--preview-cli|--preview-html]``."""
+"""CLI entry-point for the Uniqlo sales alerter."""
 
 from __future__ import annotations
 
@@ -33,6 +33,11 @@ def main() -> None:
         action="store_true",
         help=argparse.SUPPRESS,  # backward compat alias for --preview-cli
     )
+    preview_group.add_argument(
+        "--once",
+        action="store_true",
+        help="Run one production sale check, send configured notifications, and exit.",
+    )
     parser.add_argument(
         "--config",
         default=None,
@@ -44,8 +49,33 @@ def main() -> None:
         asyncio.run(_run_preview(args.config, mode="cli"))
     elif args.preview_html:
         asyncio.run(_run_preview(args.config, mode="html"))
+    elif args.once:
+        asyncio.run(_run_once(args.config))
     else:
         _run_server()
+
+
+async def _run_once(config_path: str | None) -> None:
+    from uniqlo_sales_alerter.config import load_config
+    from uniqlo_sales_alerter.main import AppState, run_sale_check
+    from uniqlo_sales_alerter.notifications.dispatcher import NotificationDispatcher
+    from uniqlo_sales_alerter.services.sale_checker import SaleChecker
+
+    config = load_config(config_path)
+    checker = SaleChecker(config)
+    dispatcher = NotificationDispatcher(config)
+    app_state = AppState(config=config, sale_checker=checker, dispatcher=dispatcher)
+
+    try:
+        result = await run_sale_check(app_state)
+    finally:
+        await checker.close()
+
+    print(
+        f"  Scanned {result.total_products_scanned} sale items, "
+        f"{len(result.matching_deals)} matched your filters, "
+        f"{len(result.new_deals)} were new.\n"
+    )
 
 
 async def _run_preview(

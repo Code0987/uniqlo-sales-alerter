@@ -89,6 +89,27 @@ class TestLoadConfig:
         assert cfg.notifications.channels.telegram.bot_token == "secret123"
         assert cfg.notifications.channels.telegram.chat_id == "12345"
 
+    def test_env_var_resolution_loads_dotenv_file(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ):
+        monkeypatch.delenv("DOTENV_TOKEN", raising=False)
+        yaml_content = textwrap.dedent("""\
+            notifications:
+              channels:
+                telegram:
+                  enabled: true
+                  bot_token: "${DOTENV_TOKEN}"
+                  chat_id: "12345"
+        """)
+        config_file = tmp_path / "config.yaml"
+        config_file.write_text(yaml_content)
+        env_file = tmp_path / ".env"
+        env_file.write_text("DOTENV_TOKEN=dotenv-secret\n")
+
+        cfg = load_config(config_file)
+
+        assert cfg.notifications.channels.telegram.bot_token == "dotenv-secret"
+
     def test_missing_file_returns_defaults(self, tmp_path: Path):
         cfg = load_config(tmp_path / "nonexistent.yaml")
         assert cfg.country_code == "de"

@@ -1,0 +1,74 @@
+name: Uniqlo Sales Alerts
+
+on:
+  schedule:
+    - cron: "0 * * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: uniqlo-sales-alerter
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  uniqlo-sales-alerts:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Restore seen variants
+        run: |
+          git fetch origin alerter-state || true
+          if git show origin/alerter-state:.seen_variants.json > /tmp/seen_variants.json; then
+            mv /tmp/seen_variants.json .seen_variants.json
+          else
+            rm -f /tmp/seen_variants.json
+          fi
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install
+        run: python -m pip install -e .
+
+      - name: Run Uniqlo sales alerts
+        run: uniqlo-sales-alerts --once
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+          SMTP_FROM: ${{ secrets.SMTP_FROM }}
+          SMTP_TO: ${{ secrets.SMTP_TO }}
+
+      - name: Save seen variants
+        run: |
+          if [ ! -f .seen_variants.json ]; then
+            echo "No seen-variants state file to save."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git fetch origin alerter-state || true
+
+          state_file="$(mktemp)"
+          cp .seen_variants.json "$state_file"
+
+          if git show-ref --verify --quiet refs/remotes/origin/alerter-state; then
+            git checkout -B alerter-state origin/alerter-state
+          else
+            git checkout --orphan alerter-state
+            git rm -rf . || true
+          fi
+
+          cp "$state_file" .seen_variants.json
+          git add .seen_variants.json
+          git commit -m "Update seen variants" || exit 0
+          git push origin alerter-state

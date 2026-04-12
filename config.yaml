@@ -5,7 +5,7 @@ uniqlo:
   # Americas:     "us/en", "ca/en", "ca/fr"
   # Asia-Pacific: "jp/ja", "kr/ko", "au/en", "in/en", "sg/en",
   #               "my/en", "id/en", "vn/vi"
-  country: "de/de"
+  country: "in/en"
 
   # How often to poll the Uniqlo API (in minutes)
   check_interval_minutes: 15
@@ -14,7 +14,6 @@ filters:
   # Which genders to include. Valid values: men, women, unisex, kids, baby
   gender:
     - men
-    - women
     - unisex
 
   # Minimum discount percentage to surface a deal. Default: 50
@@ -31,26 +30,23 @@ filters:
   # One Size: bags, hats, accessories, etc.
   sizes:
     clothing:
+      - S
       - M
     pants:
       - "30inch"
       - "31inch"
       - "32inch"
     shoes:
+      - "40"
+      - "41"
       - "42"
-      - "42.5"
     one_size: true
 
   # Full Uniqlo product URLs to always include when available in stock,
   # even if the item is not on sale.  The colour and size from each URL are
   # preferred during stock verification, and the watched size is included
   # even when it falls outside your size filter.
-  watched_urls:
-    - "https://www.uniqlo.com/de/de/products/E483049-000/00?colorDisplayCode=70&sizeDisplayCode=003"
-    - "https://www.uniqlo.com/de/de/products/E469830-000/00?colorDisplayCode=09&sizeDisplayCode=003"
-    - "https://www.uniqlo.com/de/de/products/E482815-000/00?colorDisplayCode=38&sizeDisplayCode=360"
-    - "https://www.uniqlo.com/de/de/products/E482815-000/00?colorDisplayCode=09&sizeDisplayCode=360"
-    - "https://www.uniqlo.com/de/de/products/E483045-000/00?colorDisplayCode=70&sizeDisplayCode=003"
+  watched_urls: []
 
 notifications:
   # Preview modes — generate local previews of matched deals.
@@ -65,16 +61,16 @@ notifications:
   #                     variant. State persisted to .seen_variants.json so
   #                     restarts don't re-trigger already-seen deals.
   #   "every_check"  — send ALL matching deals every time (useful for digests).
-  notify_on: all_then_new
+  notify_on: new_deals
 
   channels:
     telegram:
-      enabled: false
+      enabled: true
       bot_token: "${TELEGRAM_BOT_TOKEN}"
       chat_id: "${TELEGRAM_CHAT_ID}"
 
     email:
-      enabled: true
+      enabled: false
       smtp_host: "smtp.gmail.com"
       smtp_port: 587
       use_tls: true

@@ -10,11 +10,15 @@ dependencies = [
     "uvicorn[standard]>=0.34",
     "httpx>=0.28",
     "pydantic>=2.10",
+    "python-dotenv>=1.0",
     "pyyaml>=6.0",
     "apscheduler>=3.10,<4",
     "python-telegram-bot>=21",
     "aiosmtplib>=3",
 ]
+
+[project.scripts]
+uniqlo-sales-alerts = "uniqlo_sales_alerter.__main__:main"
 
 [project.optional-dependencies]
 dev = [
