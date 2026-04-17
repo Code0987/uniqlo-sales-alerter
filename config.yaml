@@ -30,12 +30,13 @@ filters:
   # One Size: bags, hats, accessories, etc.
   sizes:
     clothing:
+      - XS
       - S
       - M
     pants:
+      - "29inch"
       - "30inch"
       - "31inch"
-      - "32inch"
     shoes:
       - "40"
       - "41"
@@ -61,7 +62,7 @@ notifications:
   #                     variant. State persisted to .seen_variants.json so
   #                     restarts don't re-trigger already-seen deals.
   #   "every_check"  — send ALL matching deals every time (useful for digests).
-  notify_on: new_deals
+  notify_on: all_then_new
 
   channels:
     telegram:
