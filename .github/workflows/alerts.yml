@@ -2,7 +2,7 @@ name: Uniqlo Sales Alerts
 
 on:
   schedule:
-    - cron: "0/15 * * * *"
+    - cron: "0/45 * * * *"
   workflow_dispatch:
 
 concurrency:
